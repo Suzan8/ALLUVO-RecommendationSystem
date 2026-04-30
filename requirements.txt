@@ -1,7 +1,14 @@
-pandas
-numpy
-scikit-learn
-matplotlib
-seaborn
-tqdm
-python-dotenv
+pandas>=1.5
+numpy>=1.23
+scikit-learn>=1.2
+matplotlib>=3.7
+seaborn>=0.12
+tqdm>=4.65
+python-dotenv>=1.0
+
+# API
+fastapi>=0.110
+uvicorn>=0.29
+
+# Model saving/loading
+joblib>=1.3
