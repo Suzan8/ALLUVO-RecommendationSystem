@@ -1,29 +1,39 @@
-# =========================
-# Main Recommendation Router
-# =========================
-def recommend(
-    user_id,
-    final_scores,
-    users_df,
-    reels_df,
-    interactions_df,
-    k=10
-):
+def recommend(final_scores, reels_df, popularity_score, user_id, interests=None, k=10):
 
-    # Level 1: Normal model
-    if final_scores is not None and user_id in final_scores.index:
-        return final_scores.loc[user_id] \
-            .sort_values(ascending=False) \
-            .head(k) \
-            .index \
+    # (Hybrid)
+    if user_id in final_scores.index:
+        return (
+            final_scores.loc[user_id]
+            .sort_values(ascending=False)
+            .head(k)
+            .index
             .tolist()
+        )
 
-    # Level 2: Content-based cold start
-    elif user_id in users_df["user_id"].values:
-        from models.cold_start import cold_start_content
-        return cold_start_content(users_df, reels_df, user_id, k)
+    # (Cold Start)
+    elif interests is not None and len(interests) > 0:
 
-    # Level 3: Popularity fallback
+        
+        temp_df = reels_df.copy()
+
+        temp_df['score'] = temp_df['category'].apply(
+            lambda x: 1 if x in interests else 0
+        )
+
+        return (
+            temp_df
+            .sort_values(['score', 'total_views'], ascending=False)
+            ['reel_id']
+            .head(k)
+            .tolist()
+        )
+
+    # (Popularity)
     else:
-        from models.cold_start import popularity_recommendation
-        return popularity_recommendation(interactions_df, k)
+        return (
+            popularity_score
+            .sort_values(ascending=False)
+            .head(k)
+            .index
+            .tolist()
+        )
