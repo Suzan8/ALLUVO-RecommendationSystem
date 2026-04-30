@@ -4,10 +4,7 @@ from src.utils.helpers import recommend
 from models.load_models import load_all
 
 app = FastAPI()
-
-
 final_scores, reels_df, popularity_score = load_all()
-
 
 @app.post("/recommend")
 def recommend_api(
@@ -16,7 +13,6 @@ def recommend_api(
     k: int = 10
 ):
 
-    
     if interests:
         interests = [
             i.strip() for i in interests
