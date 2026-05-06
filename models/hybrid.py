@@ -3,14 +3,14 @@ import numpy as np
 
 
 # =========================
-# Normalize function
+# Normalize
 # =========================
 def normalize(df):
-    return (df - df.min()) / (df.max() - df.min())
+    return (df - df.min()) / (df.max() - df.min() + 1e-8)
 
 
 # =========================
-# Build Hybrid Model
+# Hybrid Model (FIXED)
 # =========================
 def build_hybrid_model(
     content_scores,
@@ -18,30 +18,48 @@ def build_hybrid_model(
     popularity_score,
     interactions_df,
     time_decay_score,
-    weights=(0.35, 0.45, 0.1, 0.1)
+    weights=(0.4, 0.4, 0.1, 0.1)
 ):
 
+    # -------------------------
+    # Normalize matrices
+    # -------------------------
     content_norm = normalize(content_scores)
     cf_norm = normalize(cf_scores)
 
-    popularity_norm = popularity_score / popularity_score.max()
+    # -------------------------
+    # Fix popularity (reels level → broadcast correctly)
+    # -------------------------
+    popularity_score = popularity_score / (popularity_score.max() + 1e-8)
 
-    # expand popularity to matrix
     popularity_matrix = pd.DataFrame(
-        np.tile(popularity_norm.values, (content_norm.shape[0], 1)),
+        np.repeat(
+            popularity_score.values.reshape(1, -1),
+            content_norm.shape[0],
+            axis=0
+        ),
         index=content_norm.index,
         columns=content_norm.columns
     )
 
-    # expand time decay to matrix
-    time_decay_score = time_decay_score / time_decay_score.max()
+    # -------------------------
+    # Fix time decay (reels level)
+    # -------------------------
+    time_decay_score = time_decay_score / (time_decay_score.max() + 1e-8)
 
     time_matrix = pd.DataFrame(
-        np.tile(time_decay_score.values, (content_norm.shape[0], 1)),
+        np.repeat(
+            time_decay_score.values.reshape(1, -1),
+            content_norm.shape[0],
+            axis=0
+        ),
         index=content_norm.index,
         columns=content_norm.columns
     )
 
+    # -------------------------
+    # Weighted sum
+    # -------------------------
     w1, w2, w3, w4 = weights
 
     final_scores = (
@@ -58,6 +76,9 @@ def build_hybrid_model(
 # Recommend function
 # =========================
 def recommend_hybrid(final_scores, interactions_df, user_id, top_k=10):
+
+    if user_id not in final_scores.index:
+        return []
 
     user_scores = final_scores.loc[user_id]
 

@@ -2,16 +2,17 @@ import pandas as pd
 import numpy as np
 import random
 import os
+import json
 from datetime import datetime, timedelta
 
 np.random.seed(42)
 
 DATA_PATH = "data/raw/users.csv"
-
 num_users = 2000
 
+
 # =========================
-# Age distribution (18-60)
+# Age distribution
 # =========================
 def generate_age():
     r = random.random()
@@ -26,7 +27,7 @@ def generate_age():
 
 
 # =========================
-# Interests (7 categories)
+# Interests
 # =========================
 categories = ["Fashion", "Beauty", "Fitness", "Technology", "Home", "Sports", "Gaming"]
 
@@ -42,44 +43,76 @@ def generate_followed_brands():
 
 
 # =========================
-# Core generator (NO CHANGE)
+# Safe datetime
+# =========================
+def generate_created_at():
+    dt = datetime.now() - timedelta(days=random.randint(0, 365))
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+
+# =========================
+# Core generator
 # =========================
 def generate_users():
     users = []
 
     for i in range(1, num_users + 1):
-        user = {
+        users.append({
             "user_id": i,
             "age": generate_age(),
             "gender": random.choice(["Male", "Female"]),
-            "interests": generate_interests(),
-            "followed_brands": generate_followed_brands(),
-            "created_at": datetime.now() - timedelta(days=random.randint(0, 365))
-        }
-        users.append(user)
+            "interests": json.dumps(generate_interests()),  # JSON string
+            "followed_brands": json.dumps(generate_followed_brands()),  # JSON string
+            "created_at": generate_created_at()
+        })
 
     return pd.DataFrame(users)
 
 
 # =========================
-# Smart loader (NEW - important)
+# SAFE JSON parser (🔥 مهم جدا)
+# =========================
+def safe_json_load(x):
+    try:
+        if isinstance(x, list):
+            return x
+        if pd.isna(x):
+            return []
+        return json.loads(x)
+    except:
+        return []
+
+
+# =========================
+# Loader (FINAL FIX)
 # =========================
 def get_users():
-    """
-    - If file exists → load it
-    - Else → generate + save it
-    """
 
     if os.path.exists(DATA_PATH):
         print("📂 Loading existing users dataset...")
-        return pd.read_csv(DATA_PATH)
+
+        users_df = pd.read_csv(DATA_PATH)
+
+        # 🔥 FIX datetime parsing (no warning)
+        users_df["created_at"] = pd.to_datetime(
+            users_df["created_at"],
+            format="%Y-%m-%d %H:%M:%S",
+            errors="coerce"
+        )
+
+        users_df = users_df.dropna(subset=["created_at"])
+
+        # 🔥 FIX JSON corruption
+        users_df["interests"] = users_df["interests"].apply(safe_json_load)
+        users_df["followed_brands"] = users_df["followed_brands"].apply(safe_json_load)
+
+        return users_df
 
     print("⚙️ Generating users dataset...")
+
     users_df = generate_users()
 
     os.makedirs(os.path.dirname(DATA_PATH), exist_ok=True)
     users_df.to_csv(DATA_PATH, index=False)
 
     return users_df
-
-
