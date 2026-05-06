@@ -6,26 +6,42 @@ import numpy as np
 # ==============================
 def upsert_data(file_path, new_df, key_col):
 
-    try:
+    import pandas as pd
+    import os
+
+    # 🔥 تأكد إن الداتا types مظبوطة
+    new_df = new_df.copy()
+
+    if os.path.exists(file_path):
         old_df = pd.read_csv(file_path)
 
+        # 🔥 توحيد types (مهم جدًا)
         if isinstance(key_col, list):
-            mask = pd.Series(True, index=old_df.index)
             for col in key_col:
-                mask &= ~old_df[col].isin(new_df[col])
-            old_df = old_df[mask]
+                old_df[col] = old_df[col].astype(str)
+                new_df[col] = new_df[col].astype(str)
         else:
-            old_df = old_df[~old_df[key_col].isin(new_df[key_col])]
+            old_df[key_col] = old_df[key_col].astype(str)
+            new_df[key_col] = new_df[key_col].astype(str)
 
+        # 🔥 دمج نظيف
         combined = pd.concat([old_df, new_df], ignore_index=True)
 
-    except FileNotFoundError:
+        # 🔥 إزالة التكرار
+        combined = combined.drop_duplicates(
+            subset=key_col,
+            keep="last"
+        )
+
+    else:
         combined = new_df
 
-    # 🔥 FIX مهم
     combined = combined.reset_index(drop=True)
 
+    # 🔥 كتابة آمنة
     combined.to_csv(file_path, index=False)
+
+    print("✅ Data saved. Total rows:", len(combined))
 
 
 # ==============================

@@ -4,6 +4,7 @@ import random
 import os
 import json
 from datetime import datetime, timedelta
+import os
 
 np.random.seed(42)
 
@@ -87,6 +88,8 @@ def safe_json_load(x):
 # Loader (FINAL FIX)
 # =========================
 def get_users():
+   
+    print("📁 USERS PATH:", os.path.abspath(DATA_PATH))
 
     if os.path.exists(DATA_PATH):
         print("📂 Loading existing users dataset...")

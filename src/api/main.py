@@ -3,6 +3,8 @@ from typing import Optional, List
 from pydantic import BaseModel
 import pandas as pd
 import json
+import os
+
 
 from src.utils.helpers import (
     recommend,
@@ -17,14 +19,14 @@ app = FastAPI()
 
 
 # ==============================
-# 🔹 Load models (dynamic)
+# Load models
 # ==============================
 def get_models():
     return load_all()
 
 
 # ==============================
-# 🔹 Schemas
+# Schemas
 # ==============================
 class User(BaseModel):
     user_id: int
@@ -63,21 +65,16 @@ class Brand(BaseModel):
 
 
 # ==============================
-# 🔹 Recommendation
+# Recommendation
 # ==============================
 @app.post("/recommend")
 def recommend_api(user_id: int, interests: Optional[List[str]] = None, k: int = 10):
-    if interests:
-        interests = [
-            i.strip() for i in interests
-            if i and i.strip().lower() != "string"
-        ]
 
-        
+    if interests:
+        interests = [i.strip() for i in interests if i and i != "string"]
         if len(interests) == 0:
             interests = None
 
-            
     final_scores, reels_df, popularity_score = get_models()
 
     recs = recommend(
@@ -91,21 +88,23 @@ def recommend_api(user_id: int, interests: Optional[List[str]] = None, k: int = 
 
     return {
         "user_id": user_id,
-        "recommended_reels": recs,
+        "recommended_reels": list(recs),
         "model": (
             "hybrid" if user_id in final_scores.index
-            else "cold_start" if interests is not None
+            else "cold_start" if interests
             else "popularity"
         )
     }
 
 
 # ==============================
-# 🔹 Add User
+# Add User
 # ==============================
-
 @app.post("/add_user")
 def add_user(user: User):
+
+    file_path = "data/raw/users.csv"
+    
 
     data = user.dict()
 
@@ -113,27 +112,25 @@ def add_user(user: User):
     data["followed_brands"] = json.dumps(data["followed_brands"])
 
     df = pd.DataFrame([data])
-    upsert_data("data/raw/users.csv", df, "user_id")
+    upsert_data(file_path, df, "user_id")
 
     return {"message": "User added"}
+
+
 # ==============================
-# 🔹 Add Reel
+# Add Reel
 # ==============================
 @app.post("/add_reel")
 def add_reel(reel: Reel):
 
-    final_scores, reels_df, popularity_score = get_models()
-
     df = pd.DataFrame([reel.dict()])
     upsert_data("data/raw/reels.csv", df, "reel_id")
 
-    final_scores = replace_reel_in_model(final_scores, reel.reel_id)
-
-    return {"message": "Reel updated"}
+    return {"message": "Reel added"}
 
 
 # ==============================
-# 🔹 Add Brand
+# Add Brand
 # ==============================
 @app.post("/add_brand")
 def add_brand(brand: Brand):
@@ -145,20 +142,27 @@ def add_brand(brand: Brand):
 
 
 # ==============================
-# 🔹 Add Interaction
+# Add Interaction
 # ==============================
 @app.post("/add_interaction")
 def add_interaction(interaction: Interaction):
 
-    final_scores, reels_df, popularity_score = get_models()
+    data = interaction.dict()
 
-    df = pd.DataFrame([interaction.dict()])
-    upsert_data("data/raw/interactions.csv", df, ["user_id", "reel_id"])
-
-    final_scores, popularity_score = update_after_interaction(
-        final_scores,
-        popularity_score,
-        interaction
+    # 🔥 تأكد فورمات timestamp
+    data["timestamp"] = pd.to_datetime(
+        data["timestamp"],
+        errors="coerce"
     )
+
+    if pd.isna(data["timestamp"]):
+        return {"error": "Invalid timestamp format"}
+
+    # رجعه string موحد
+    data["timestamp"] = data["timestamp"].strftime("%Y-%m-%d %H:%M:%S")
+
+    df = pd.DataFrame([data])
+
+    upsert_data("data/raw/interactions.csv", df, ["user_id", "reel_id"])
 
     return {"message": "Interaction added"}

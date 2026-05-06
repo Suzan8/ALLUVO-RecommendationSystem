@@ -22,7 +22,7 @@ from models.save_models import save_all
 # =========================
 def retrain():
 
-    print("🚀 Retraining started...")
+    print(" Retraining started...")
 
     # 1. Load data
     users_df, brands_df, reels_df, interactions_df = load_data()
@@ -33,7 +33,7 @@ def retrain():
     )
 
     # 3. Interaction Matrix
-    interaction_matrix = build_interaction_matrix(interactions_df)
+    interaction_matrix = build_interaction_matrix(interactions_df, reels_df)
 
     # 4. Content-Based (FIXED PIPELINE)
     user_vectors, reel_vectors, user_ids, reel_ids = build_unified_features(
@@ -54,7 +54,7 @@ def retrain():
     popularity_score = build_popularity_model(reels_df)
 
     # 7. Time Decay Model
-    time_decay_score = build_time_decay(interactions_df)
+    time_decay_score = build_time_decay(interactions_df, reels_df)
 
     # 8. Hybrid Model
     final_scores = build_hybrid_model(
@@ -82,7 +82,7 @@ def retrain_loop(interval=60):  # 3600 = 1 hour
         except Exception as e:
             print("❌ Error in retraining:", e)
 
-        print(f"⏳ Waiting {interval} seconds...")
+        print(f" Waiting {interval} seconds...")
         time.sleep(interval)
 
 
@@ -90,4 +90,4 @@ def retrain_loop(interval=60):  # 3600 = 1 hour
 # Run directly
 # =========================
 if __name__ == "__main__":
-    retrain_loop()
+    retrain_loop(interval=60)

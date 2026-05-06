@@ -1,61 +1,83 @@
 import pandas as pd
 import json
-
-from src.data.generate_users import get_users
-from src.data.generate_brands import get_brands
-from src.data.generate_reels import get_reels
-from src.data.generate_interactions import get_interactions
+import os
 
 
 # =========================
-# Load + Preprocess Users
+# Safe JSON loader
+# =========================
+def safe_json_load(x):
+    if isinstance(x, list):
+        return x
+    if isinstance(x, str):
+        try:
+            return json.loads(x)
+        except:
+            return []
+    return []
+
+
+# =========================
+# 🔥 FIX: multi-format datetime parser
+# =========================
+def parse_datetime_column(col):
+    dt1 = pd.to_datetime(col, format="%Y-%m-%d %H:%M:%S", errors="coerce")
+    dt2 = pd.to_datetime(col, format="%m/%d/%Y %I:%M:%S %p", errors="coerce")
+    return dt1.fillna(dt2)
+
+
+# =========================
+# Preprocess Users
 # =========================
 def preprocess_users(users_df: pd.DataFrame):
 
     users_df = users_df.copy()
 
-    # -------------------------
-    # JSON fields fix (SAFE)
-    # -------------------------
-    users_df["interests"] = users_df["interests"].apply(
-        lambda x: json.loads(x) if isinstance(x, str) else x
-    )
+    # JSON fix
+    if "interests" in users_df.columns:
+        users_df["interests"] = users_df["interests"].apply(safe_json_load)
 
-    users_df["followed_brands"] = users_df["followed_brands"].apply(
-        lambda x: json.loads(x) if isinstance(x, str) else x
-    )
+    if "followed_brands" in users_df.columns:
+        users_df["followed_brands"] = users_df["followed_brands"].apply(safe_json_load)
 
-    # -------------------------
-    # Gender Encoding
-    # -------------------------
+    # Gender encoding
     if "gender" in users_df.columns:
         users_df["gender"] = users_df["gender"].fillna("Unknown")
         users_df = pd.get_dummies(users_df, columns=["gender"])
 
-    # -------------------------
-    # Interests text (optional)
-    # -------------------------
-    users_df["interests_str"] = users_df["interests"].apply(
-        lambda x: ",".join(x) if isinstance(x, list) else ""
-    )
+    # Interests text
+    if "interests" in users_df.columns:
+        users_df["interests_str"] = users_df["interests"].apply(
+            lambda x: ",".join(x) if isinstance(x, list) else ""
+        )
 
     return users_df
 
 
 # =========================
-# Load all datasets
+# Load all datasets (NO GENERATION)
 # =========================
 def load_data():
 
-    # 🟢 load / generate
-    users_df = get_users()
-    brands_df = get_brands()
-    reels_df = get_reels()
-    interactions_df = get_interactions()
+    users_df = pd.read_csv("data/raw/users.csv")
+    brands_df = pd.read_csv("data/raw/brands.csv")
+    reels_df = pd.read_csv("data/raw/reels.csv")
+    interactions_df = pd.read_csv("data/raw/interactions.csv")
 
     # =========================
-    # 🔥 IMPORTANT: Fix TYPES
+    # FIX TYPES
     # =========================
+    users_df["user_id"] = pd.to_numeric(users_df["user_id"], errors="coerce")
+    reels_df["reel_id"] = pd.to_numeric(reels_df["reel_id"], errors="coerce")
+    reels_df["brand_id"] = pd.to_numeric(reels_df["brand_id"], errors="coerce")
+
+    interactions_df["user_id"] = pd.to_numeric(interactions_df["user_id"], errors="coerce")
+    interactions_df["reel_id"] = pd.to_numeric(interactions_df["reel_id"], errors="coerce")
+
+    users_df = users_df.dropna(subset=["user_id"])
+    reels_df = reels_df.dropna(subset=["reel_id"])
+    interactions_df = interactions_df.dropna(subset=["user_id", "reel_id"])
+
     users_df["user_id"] = users_df["user_id"].astype(int)
     reels_df["reel_id"] = reels_df["reel_id"].astype(int)
     reels_df["brand_id"] = reels_df["brand_id"].astype(int)
@@ -64,37 +86,23 @@ def load_data():
     interactions_df["reel_id"] = interactions_df["reel_id"].astype(int)
 
     # =========================
-    # Preprocess USERS
+    # preprocess users
     # =========================
     users_df = preprocess_users(users_df)
 
     # =========================
-    # Datetime parsing (FIX ALL FORMATS)
+    # 🔥 FIX datetime (multi-format)
     # =========================
-    users_df["created_at"] = pd.to_datetime(
-        users_df["created_at"],
-        errors="coerce"
-    )
+    users_df["created_at"] = parse_datetime_column(users_df["created_at"])
+    reels_df["created_at"] = parse_datetime_column(reels_df["created_at"])
+    interactions_df["timestamp"] = parse_datetime_column(interactions_df["timestamp"])
 
-    reels_df["created_at"] = pd.to_datetime(
-        reels_df["created_at"],
-        errors="coerce"
-    )
-
-    interactions_df["timestamp"] = pd.to_datetime(
-        interactions_df["timestamp"],
-        errors="coerce"
-    )
+    # ❗ مهم: سيب users زي ما هو
+    reels_df = reels_df.dropna(subset=["created_at"])
+    interactions_df = interactions_df.dropna(subset=["timestamp"])
 
     # =========================
-    # 🔥 DROP BAD ROWS (VERY IMPORTANT)
-    # =========================
-    # users_df = users_df.dropna(subset=["created_at"])
-    #reels_df = reels_df.dropna(subset=["created_at"])
-    #interactions_df = interactions_df.dropna(subset=["timestamp"])
-
-    # =========================
-    # 🔥 REMOVE DUPLICATES (UPSERT SAFETY)
+    # remove duplicates
     # =========================
     users_df = users_df.drop_duplicates(subset=["user_id"], keep="last")
     reels_df = reels_df.drop_duplicates(subset=["reel_id"], keep="last")
@@ -111,19 +119,7 @@ def load_data():
     print("✅ Users:", users_df.shape)
     print("✅ Reels:", reels_df.shape)
     print("✅ Interactions:", interactions_df.shape)
+    print("✅ brands:", brands_df.shape)
 
-    print("🔍 Check user 9999 exists:", 9999 in users_df["user_id"].values)
-    print("🔍 Check interaction exists:", 9999 in interactions_df["user_id"].values)
 
     return users_df, brands_df, reels_df, interactions_df
-
-
-# =========================
-# Test
-# =========================
-if __name__ == "__main__":
-    users_df, brands_df, reels_df, interactions_df = load_data()
-
-    print(users_df.head())
-    print(reels_df.head())
-    print(interactions_df.head())

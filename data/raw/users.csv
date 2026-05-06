@@ -1999,3 +1999,7 @@ user_id,age,gender,interests,followed_brands,created_at
 1998,18,Female,"[""Sports"", ""Fitness""]","[5, 26, 28, 7, 17]",2025-05-17 22:22:35
 1999,23,Male,"[""Home"", ""Technology""]","[21, 22, 14, 2]",2025-09-23 22:22:35
 2000,22,Female,"[""Home"", ""Technology"", ""Beauty"", ""Fashion""]",[11],2025-07-31 22:22:35
+9989,25,Female,"[""Fashion"", ""Beauty""]","[1, 2]",10/19/2025  9:14:23 PM
+9999,25,Female,"[""Fashion"", ""Beauty""]","[1, 2]",10/19/2025  9:14:23 PM
+4003,27,Female,"[""Makeup"", ""Fashion"", ""Luxury""]","[1, 2, 4]",10/12/2025  11:20:00 AM
+5000,27,Female,"[""Makeup"", ""Fashion"", ""Luxury""]","[1, 2, 4]",10/12/2025  11:20:00 AM

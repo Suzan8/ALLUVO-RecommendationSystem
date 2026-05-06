@@ -29,3 +29,6 @@ brand_id,brand_name,category,brand_popularity_score
 28,Brand 28,Home,85.26
 29,Brand 29,Beauty,81.47
 30,Brand 30,Fashion,30.88
+100,Fashion Nova,Fashion,85.0
+35,Glow Beauty,Beauty,70.0
+33,Fashion Nova,Fashion,85.0

@@ -5,12 +5,19 @@ import os
 # =========================
 # Build Interaction Matrix
 # =========================
-def build_interaction_matrix(interactions_df):
+def build_interaction_matrix(interactions_df, reels_df):
 
     interaction_matrix = interactions_df.pivot_table(
         index="user_id",
         columns="reel_id",
         values="watch_ratio",
+        aggfunc="mean",
+        fill_value=0
+    )
+
+    # 🔥 أهم خطوة: ضيف كل reels حتى لو مفيش interaction
+    interaction_matrix = interaction_matrix.reindex(
+        columns=reels_df["reel_id"],
         fill_value=0
     )
 
