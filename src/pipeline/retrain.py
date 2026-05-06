@@ -74,7 +74,7 @@ def retrain():
 # =========================
 # Loop every hour
 # =========================
-def retrain_loop(interval=60):  # 3600 = 1 hour
+def retrain_loop(interval=3600):  # 3600 = 1 hour
 
     while True:
         try:
