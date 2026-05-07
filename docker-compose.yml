@@ -1,0 +1,24 @@
+services:
+
+  api:
+    build: .
+
+    container_name: alluvo_api
+
+    ports:
+      - "8000:8000"
+
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+
+    volumes:
+      - .:/app
+
+  retrain:
+    build: .
+
+    container_name: alluvo_retrain
+
+    command: python -m src.pipeline.retrain
+
+    volumes:
+      - .:/app
