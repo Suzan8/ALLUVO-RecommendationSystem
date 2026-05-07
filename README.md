@@ -1,49 +1,63 @@
-# Alluvo Hybrid Recommendation System
+Alluvo Hybrid Recommendation System
+A production-ready Hybrid Recommendation System built for Alluvo, a reels-based e-commerce platform that delivers personalized product reels to users.
 
-A Production-ready Hybrid Recommendation System built for Alluvo, a reels-based e-commerce platform.
+Project Overview
+This system provides personalized reel recommendations using a combination of:
+Content-Based Filtering
+Collaborative Filtering
+Popularity Ranking
+Time Decay Scoring
 
----
+The project is designed with a scalable architecture suitable for real-world deployment using FastAPI and automatic retraining pipelines.
 
-## 🚀 Project Goal
+Recommendation Strategies
+The recommendation engine dynamically selects the best strategy depending on the user state.
+User State	Recommendation Strategy:
+-Existing User with interactions	Hybrid Recommendation
+-New User with interests	Cold Start Content-Based
+-Completely New User	Popularity-Based Recommendation
+-Hybrid Recommendation Formula
 
-To build a scalable recommendation engine that serves personalized reels using:
+Final recommendation scores are generated using:
+Final Score =
+0.4 × Content-Based Score
++ 0.4 × Collaborative Filtering Score
++ 0.1 × Popularity Score
++ 0.1 × Time Decay Score
 
-- Content-Based Filtering (user interests, categories)
-- Collaborative Filtering (user behavior)
-- Popularity Boosting
-- Time Decay Ranking
+Synthetic Dataset
+Since the platform is under development, realistic synthetic data is generated automatically.
 
----
+Users
+Age
+Gender
+Interests
+Followed Brands
+Account Creation Date
+Brands
+Brand Name
+Category
+Popularity Score
+Reels
+Product Reels
+Category
+Price
+Video Duration
+Creation Time
+Interactions
+Views
+Watch Ratio
+Likes
+Comments
+Purchases
+Interaction Timestamp
 
-## 🧠 Recommendation Logic
-
-The system dynamically selects the recommendation strategy:
-
-| Case | Strategy |
-|------|--------|
-| 🟢 Existing User | Hybrid Model |
-| 🟡 New User + Interests | Content-Based (Cold Start) |
-| 🔵 New User (No Data) | Popularity |
-
----
-
-## 📊 Dataset (Synthetic)
-
-Since the platform is still under development, we simulate realistic data:
-
-- Users (age, gender, interests, followed brands)
-- Brands (category, popularity)
-- Reels (products as videos)
-- Interactions (views, likes, comments, purchases)
-
----
-
-## 🏗 Project Structure
+Project Structure
 ALLUVO-RecommendationSystem/
 │
 ├── data/
-│ ├── raw/
-│ ├── processed/
+│   ├── raw/
+│   └── processed/
 │
 ├── notebooks/
 │
@@ -53,85 +67,176 @@ ALLUVO-RecommendationSystem/
 │   │   ├── generate_brands.py
 │   │   ├── generate_reels.py
 │   │   └── generate_interactions.py
+│   │
 │   ├── preprocessing/
-│   │   ├── build_interaction_matrix.py
+│   │   ├── load_data.py
 │   │   ├── feature_engineering.py
-│   │   └── load_data.py
+│   │   └── build_interaction_matrix.py
+│   │
 │   ├── evaluation/
 │   │   ├── evaluation.py
 │   │   └── metrics.py
+│   │
 │   ├── utils/
 │   │   └── helpers.py
+│   │
 │   ├── pipeline/
 │   │   └── retrain.py
-│   ├── api/ 
-│   │   └── main.py
+│   │
+│   └── api/
+│       └── main.py
 │
-├── models/ 
+├── models/
 │   ├── content_based.py
 │   ├── collaborative_filtering.py
-│   ├── cold_start.py
-│   ├── load_models.py
-│   ├── save_models.py
+│   ├── hybrid.py
 │   ├── popularity.py
 │   ├── time_decay.py
-│   └── hybrid.py
+│   ├── cold_start.py
+│   ├── save_models.py
+│   └── load_models.py
 │
-├── save_run.py
+├── saved_models/
 │
 ├── requirements.txt
 ├── README.md
 └── .gitignore
 
+Tech Stack
+Python
+FastAPI
+Pandas
+NumPy
+Scikit-learn
+TF-IDF
+TruncatedSVD
+Cosine Similarity
 
----
-
-## ⚙️ Setup
-
-```bash
+Installation
+1️⃣ Create Virtual Environment
+Windows
 python -m venv RS_env
-source RS_env/bin/activate      # Mac/Linux
-RS_env\Scripts\activate         # Windows
-
+RS_env\Scripts\activate
+Mac/Linux
+python -m venv RS_env
+source RS_env/bin/activate
+2️⃣ Install Dependencies
 pip install -r requirements.txt
 
+Generate Synthetic Data
+The system automatically generates datasets if they do not exist.
+Generated files:
+users.csv
+brands.csv
+reels.csv
+interactions.csv
 
-💾 Save Models
-Before running the API, make sure to save trained models:
+Run Retraining Pipeline
+The retraining pipeline:
+Loads datasets
+Performs preprocessing
+Builds recommendation models
+Saves trained models
+python -m src.pipeline.retrain
+The retraining loop automatically updates the recommendation models periodically.
 
-from save_models import save_all
-save_all(final_scores, reels_df, popularity_score)
-
-
-🚀 Run API
+Run API Server
 uvicorn src.api.main:app --reload
 
-
-📡 API Usage
-🔹 Endpoint
+API Documentation:
+http://127.0.0.1:8000/docs
+API Endpoints
+Recommend Reels
 POST /recommend
+Example Request
+{
+  "user_id": 9999,
+  "k": 10
+}
+Example Response
+{
+  "user_id": 9999,
+  "recommended_reels": [12, 55, 91, 201],
+  "model": "hybrid"
+}
 
+Add User
+POST /add_user
 
-🧪 Evaluation
-We evaluate the system using:
+Add Reel
+POST /add_reel
+
+Add Interaction
+POST /add_interaction
+
+Add Brand
+POST /add_brand
+
+Automatic Retraining
+The system supports automatic retraining using a background loop.
+Example:
+retrain_loop(interval=3600)
+This retrains the recommendation system every hour.
+
+Evaluation Metrics
+The recommendation system is evaluated using:
 Precision@K
 Recall@K
 NDCG@K
-Both:
-Item-level evaluation
-Category-level evaluation (to handle cold start)
 
+Evaluation is performed on:
+Item Level
+Category Level
 
-🔄 System Flow
+Cold Start Handling
+The system handles cold-start users using:
+
+Level 1
+Hybrid recommendations for existing users.
+Level 2
+Content-based recommendations using user interests.
+Level 3
+Popularity fallback for completely new users.
+
+Production Features
+✅ Hybrid Recommendation System
+✅ Cold Start Support
+✅ Automatic Retraining
+✅ FastAPI Integration
+✅ Dynamic User/Interaction Updates
+✅ Scalable Architecture
+✅ Production-Ready Structure
+
+System Workflow
 User Request
-    ↓
-API (FastAPI)
-    ↓
+      ↓
+FastAPI API
+      ↓
 Recommendation Router
-    ↓
-Hybrid / Content / Popularity
-    ↓
-Top-K Reel IDs
+      ↓
+Hybrid / Cold Start / Popularity
+      ↓
+Top-K Recommended Reels
 
+Running the Full System
+Terminal 1 → API Server
+uvicorn src.api.main:app --reload
+Terminal 2 → Retraining Service
+python -m src.pipeline.retrain
 
+This separation ensures:
+Faster API responses
+Stable retraining
+Production-ready deployment
 
+Future Improvements
+Real-time recommendations
+Redis caching
+Docker deployment
+Airflow scheduling
+Deep Learning recommendation models
+A/B testing pipeline
+User embedding models
+
+License
+This project is built for educational and research purposes as part of the Alluvo platform development.
