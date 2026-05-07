@@ -999,7 +999,6 @@ user_id,age,gender,interests,followed_brands,created_at
 998,40,Male,"[""Sports"", ""Fitness"", ""Home"", ""Gaming""]","[26, 15]",2025-05-21 22:22:35
 999,31,Female,"[""Technology"", ""Gaming"", ""Fitness""]","[19, 30, 15, 23, 1]",2025-05-25 22:22:35
 1000,26,Female,"[""Sports"", ""Gaming""]","[21, 26, 9, 20, 11]",2025-09-20 22:22:35
-1001,59,Female,"[""Technology"", ""Fitness""]",[6],2026-03-11 22:22:35
 1002,46,Female,"[""Fitness"", ""Beauty"", ""Fashion"", ""Home""]","[20, 17, 13, 28]",2025-12-25 22:22:35
 1003,26,Female,"[""Fitness"", ""Beauty""]","[12, 9, 8, 7, 4]",2025-11-27 22:22:35
 1004,26,Female,"[""Sports"", ""Technology"", ""Fashion""]","[5, 21]",2026-03-07 22:22:35
@@ -2003,3 +2002,5 @@ user_id,age,gender,interests,followed_brands,created_at
 9999,25,Female,"[""Fashion"", ""Beauty""]","[1, 2]",10/19/2025  9:14:23 PM
 4003,27,Female,"[""Makeup"", ""Fashion"", ""Luxury""]","[1, 2, 4]",10/12/2025  11:20:00 AM
 5000,27,Female,"[""Makeup"", ""Fashion"", ""Luxury""]","[1, 2, 4]",10/12/2025  11:20:00 AM
+1001,22,Female,"[""Fashion"", ""Beauty"", ""Skincare""]","[1, 3]",10/01/2025  6:10:00 PM
+10001,22,Female,"[""Fashion"", ""Beauty"", ""Skincare""]","[1, 3]",10/01/2025  6:10:00 PM

@@ -90,4 +90,4 @@ def retrain_loop(interval=3600):  # 3600 = 1 hour
 # Run directly
 # =========================
 if __name__ == "__main__":
-    retrain_loop(interval=60)
+    retrain_loop(interval=3600)
